@@ -33,11 +33,11 @@ Setup Instructions
 To get started with the Emotional Symphony project, follow these steps:
 
 Clone the repository:
-bashgit clone https://github.com/zz19990220/T510_2025.git
+git clone https://github.com/zz19990220/T510_2025.git
 cd T510_2025
 
 Create and activate a virtual environment:
-bashpython -m venv .venv
+python -m venv .venv
 
 # On Windows
 .venv\Scripts\activate
@@ -46,9 +46,11 @@ bashpython -m venv .venv
 source .venv/bin/activate
 
 Install required dependencies:
-bashpip install -r requirements.txt
+
+pip install -r requirements.txt
 
 Run the application:
-bashstreamlit run app.py
+
+streamlit run app.py
 
 Open your browser and navigate to the URL shown in the terminal (typically http://localhost:8501)
