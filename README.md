@@ -27,3 +27,28 @@ Build a collaborative music storytelling platform where users input emotional te
 | planning | Define core interaction flow  | TBD      | In progress |
 
 ## Contact team
+
+
+Setup Instructions
+To get started with the Emotional Symphony project, follow these steps:
+
+Clone the repository:
+bashgit clone https://github.com/zz19990220/T510_2025.git
+cd T510_2025
+
+Create and activate a virtual environment:
+bashpython -m venv .venv
+
+# On Windows
+.venv\Scripts\activate
+
+# On macOS/Linux
+source .venv/bin/activate
+
+Install required dependencies:
+bashpip install -r requirements.txt
+
+Run the application:
+bashstreamlit run app.py
+
+Open your browser and navigate to the URL shown in the terminal (typically http://localhost:8501)
