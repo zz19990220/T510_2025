@@ -395,7 +395,7 @@ if st.session_state.current_stage == "setup":
     
     if st.button("Start Creating", key="start_create"):
         st.session_state.current_stage = "input"
-        st.experimental_rerun()
+        st.rerun()
 
 elif st.session_state.current_stage == "input":
     # Show progress
@@ -455,7 +455,7 @@ elif st.session_state.current_stage == "input":
                 if len(st.session_state.story_entries) >= st.session_state.story_length:
                     st.session_state.current_stage = "generate"
                 
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("Please enter some text before submitting.")
     
@@ -513,7 +513,7 @@ elif st.session_state.current_stage == "generate":
         
         if st.button("Continue to Share Options"):
             st.session_state.current_stage = "share"
-            st.experimental_rerun()
+            st.rerun()
 
 elif st.session_state.current_stage == "share":
     st.markdown("## Share Your Emotional Symphony")
@@ -562,12 +562,16 @@ elif st.session_state.current_stage == "share":
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.download_button(
-            label="Download Image",
-            data=io.BytesIO(),  # This would be real image data in production
-            file_name="emotional_symphony.png",
-            mime="image/png"
-        )
+    buf = io.BytesIO()
+    st.session_state.final_image.save(buf, format="PNG")
+    buf.seek(0)
+
+    st.download_button(
+        label="Download Image",
+        data=buf,  # Use actual image buffer instead of empty BytesIO()
+        file_name="emotional_symphony.png",
+        mime="image/png"
+    )
     
     with col2:
         st.download_button(
@@ -608,7 +612,7 @@ elif st.session_state.current_stage == "share":
         st.session_state.animation_generated = False
         st.session_state.final_video = None
         st.session_state.current_entry_number = 1
-        st.experimental_rerun()
+        st.rerun()
 
 # Footer
 st.markdown("---")
