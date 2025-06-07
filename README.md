@@ -116,7 +116,6 @@ Simply visit [https://510510.streamlit.app/](https://510510.streamlit.app/).
 
 ## ⚙️ Technical Architecture
 
-```mermaid
 graph TD
 A[Streamlit UI] -->|input text| B[detect_emotion()]
 B --> C{Emotion label}
