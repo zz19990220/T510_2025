@@ -24,6 +24,7 @@ def detect_emotion(text):
         f"Text: {text}"
     )
     try:
+        # Try to use Gemini AI for emotion detection
         client = genai.Client(api_key=api_key)
         response = client.models.generate_content(
             model="gemini-2.0-flash",
@@ -35,7 +36,7 @@ def detect_emotion(text):
         return emotion_data
     except Exception as e:
         st.warning(f"Falling back to simple emotion detection due to error: {e}")
-        # Simple rule-based fallback
+        # Simple keyword-based fallback when API fails
         text_lower = text.lower()
         if any(word in text_lower for word in ["happy", "joy", "delight", "excited", "pleased"]):
             primary_emotion = "joy"
@@ -62,7 +63,7 @@ def generate_composite_image(emotions_detected):
     Generate an image using Gemini API based on the detected emotions.
     Returns a PIL Image object.
     """
-    # Compose a descriptive prompt from the emotions
+    # Create a summary of emotions for the image prompt
     emotion_summary = ', '.join([f"{e['emotion']} ({int(e['intensity']*100)}%)" for e in emotions_detected])
     prompt = (
         f"Create a beautiful, artistic image that visually represents the following emotions and their intensities: {emotion_summary}. "
@@ -72,7 +73,7 @@ def generate_composite_image(emotions_detected):
     # Create fallback image based on primary emotion
     try:
         primary_emotion = emotions_detected[0]["emotion"] if emotions_detected else "joy"
-        # Map emotions to colors
+        # Map each emotion to a specific color scheme
         emotion_colors = {
             "joy": (255, 223, 0),      # Yellow
             "sadness": (0, 119, 190),  # Blue
@@ -93,6 +94,7 @@ def generate_composite_image(emotions_detected):
                     response_modalities=['TEXT', 'IMAGE']
                 )
             )
+            # Extract image from response
             for part in response.candidates[0].content.parts:
                 if getattr(part, 'inline_data', None) is not None:
                     image = Image.open(BytesIO(part.inline_data.data))
@@ -101,17 +103,17 @@ def generate_composite_image(emotions_detected):
         except Exception as e:
             st.error(f"Failed to generate image with Gemini: {e}")
             
-            # Create a gradient image as fallback
+            # Create a gradient fallback image when API fails
             img = Image.new("RGB", (512, 512))
             for y in range(512):
                 for x in range(512):
-                    # Create a gradient effect
+                    # Create gradient effect based on emotion color
                     r = int(color[0] * (1 - y/512))
                     g = int(color[1] * (1 - x/512))
                     b = int(color[2] * (1 - (x+y)/1024))
                     img.putpixel((x, y), (r, g, b))
                     
-            # Draw text on the image
+            # Add text overlay
             from PIL import ImageDraw, ImageFont
             draw = ImageDraw.Draw(img)
             try:
@@ -119,21 +121,19 @@ def generate_composite_image(emotions_detected):
             except:
                 font = ImageFont.load_default()
                 
-            # Add text about the emotion
+            # Add descriptive text
             text = f"Emotional Symphony: {primary_emotion.capitalize()}"
             draw.text((100, 240), text, fill=(255, 255, 255), font=font)
             
-            # Add theme text
             theme_text = f"Theme: {st.session_state.animation_theme.capitalize()}"
             draw.text((100, 280), theme_text, fill=(255, 255, 255), font=font)
             
-            # Add emotion summary
             draw.text((100, 320), emotion_summary, fill=(255, 255, 255), font=font)
             
             st.info("Created a custom emotional image due to Gemini API limitations.")
             return img
     except Exception as e:
-        # Ultimate fallback in case of any other errors
+        # Final fallback - plain colored image
         st.error(f"Error in image generation: {e}")
         return Image.new("RGB", (512, 512), color=(200, 200, 200))
 
@@ -211,7 +211,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Initialize session state variables if they don't exist
+# Initialize session state variables
 if 'story_entries' not in st.session_state:
     st.session_state.story_entries = []
 if 'emotions_detected' not in st.session_state:
@@ -249,7 +249,7 @@ with st.sidebar:
             index=["forest", "ocean", "neon"].index(st.session_state.animation_theme)
         )
 
-# Main content
+# Main content - Stage-based workflow
 if st.session_state.current_stage == "setup":
     st.subheader("Let's create your Emotional Symphony!")
     
@@ -284,7 +284,7 @@ elif st.session_state.current_stage == "input":
     with col1:
         if st.button("Submit", key="submit_emotion"):
             if user_text.strip():
-                # Detect emotion from text
+                # Process user input and detect emotion
                 emotion_data = detect_emotion(user_text)
                 entry = {
                     "user": st.session_state.user_name,
@@ -319,16 +319,18 @@ elif st.session_state.current_stage == "generate":
     st.markdown("## Generating Your Emotional Symphony")
     if not st.session_state.animation_generated:
         with st.spinner(f"Creating {st.session_state.animation_theme}-themed animation..."):
+            # Simulate generation process
             progress_bar = st.progress(0)
             for i in range(100):
                 time.sleep(0.02)
                 progress_bar.progress(i + 1)
+            # Generate image based on emotions
             final_image = generate_composite_image(st.session_state.emotions_detected)
             st.session_state.final_image = final_image
             st.session_state.animation_generated = True
             st.success("Animation creation complete!")
             
-            # Play random music from static/music directory
+            # Play random background music
             music_dir = "static/music"
             if os.path.exists(music_dir):
                 mp3_files = [f for f in os.listdir(music_dir) if f.endswith('.mp3')]
@@ -337,16 +339,17 @@ elif st.session_state.current_stage == "generate":
                     with open(random_music_path, 'rb') as f:
                         audio_bytes = f.read()
                     
-                    # Convert audio bytes to base64
+                    # Encode audio for HTML5 autoplay
                     audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
                     
-                    # Create HTML with hidden audio player
+                    # Hidden audio player with autoplay
                     audio_html = f"""
                     <audio autoplay style="display:none">
                       <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
                     </audio>
                     """
                     st.markdown(audio_html, unsafe_allow_html=True)
+    
     if st.session_state.animation_generated:
         st.markdown("## Your Emotional Symphony is Ready!")
         st.image(st.session_state.final_image, use_column_width=True)
@@ -357,6 +360,7 @@ elif st.session_state.current_stage == "generate":
                 st.rerun()
         with col2:
             if st.button("Create a New Emotional Symphony"):
+                # Reset all session states
                 st.session_state.story_entries = []
                 st.session_state.emotions_detected = []
                 st.session_state.current_stage = "setup"
@@ -367,10 +371,10 @@ elif st.session_state.current_stage == "generate":
 elif st.session_state.current_stage == "share":
     st.markdown("## Share Your Emotional Symphony")
     
-    # 展示最终生成的图片
+    # Display final generated image
     st.image(st.session_state.final_image, use_column_width=True)
     
-    # Play random music from static/music directory
+    # Play background music again for the share page
     music_dir = "static/music"
     if os.path.exists(music_dir):
         mp3_files = [f for f in os.listdir(music_dir) if f.endswith('.mp3')]
@@ -380,10 +384,8 @@ elif st.session_state.current_stage == "share":
             with open(random_music_path, 'rb') as f:
                 audio_bytes = f.read()
             
-            # Convert audio bytes to base64
             audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
             
-            # Create HTML with hidden audio player
             audio_html = f"""
             <audio autoplay style="display:none">
               <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
@@ -391,26 +393,24 @@ elif st.session_state.current_stage == "share":
             """
             st.markdown(audio_html, unsafe_allow_html=True)
     
-    # 故事文字
+    # Display emotional journey summary
     st.markdown("### Your Emotional Journey")
     entry = st.session_state.story_entries[0]
     st.markdown(f"**Your Entry**: {entry['text']}")
     
-    # 情绪调色板
     st.markdown("### Your Emotional Palette")
     emotion = entry["emotion"]["emotion"]
     st.markdown(f"- **{emotion.capitalize()}**")
     
-    # 下载选项
+    # Download options
     st.markdown("### Save Your Creation")
     col1, col2 = st.columns(2)
     
     with col1:
-        # 将 PIL Image 写入 BytesIO
+        # Convert PIL Image to bytes for download
         img_byte_arr = io.BytesIO()
         st.session_state.final_image.save(img_byte_arr, format="PNG")
         img_byte_arr.seek(0)
-        # —— 这里改成 img_byte_arr —— 
         st.download_button(
             label="Download Image",
             data=img_byte_arr,
@@ -419,7 +419,7 @@ elif st.session_state.current_stage == "share":
         )
     
     with col2:
-        # Storyboard JSON 下载按钮
+        # Export story data as JSON
         storyboard_json = json.dumps(st.session_state.story_entries, indent=2)
         st.download_button(
             label="Download Storyboard (JSON)",
@@ -428,7 +428,7 @@ elif st.session_state.current_stage == "share":
             mime="application/json"
         )
     
-    # 重新开始按钮
+    # Restart button
     if st.button("Create a New Emotional Symphony"):
         st.session_state.story_entries = []
         st.session_state.emotions_detected = []
