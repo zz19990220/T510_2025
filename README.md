@@ -114,16 +114,18 @@ Simply visit [https://510510.streamlit.app/](https://510510.streamlit.app/).
 
 ---
 
-## ⚙️ Technical Architecture
+## ⚙️ Technical Architecture
 
+```mermaid
 graph TD
-A[Streamlit UI] -->|input text| B[detect_emotion()]
-B --> C{Emotion label}
-C --> D[generate_music()]
-C --> E[render_animation()]
-D & E --> F[Session State]
-F --> G[Download / Share]
-```
+    A[Streamlit UI] -->|input text| B[detect_emotion]
+    B --> C{Emotion label}
+    C --> D[generate_music]
+    C --> E[render_animation]
+    D --> F[Session State]
+    E --> F
+    F --> G[Download / Share]
+
 
 * **Emotion Detection**: Calls the Gemini model `models/text-bison‑001`; falls back to keyword matching if the API fails.
 * **Music Pipeline**: Maps emotions to preset MIDI files, adjusts tempo & instrumentation with **pydub**, and exports audio as WAV.
