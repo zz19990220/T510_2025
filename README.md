@@ -164,7 +164,7 @@ pytest tests/
 | --------- | ----------------------------------------------------------------- | ---------- |
 | Client M1 | Multi‑user emotional narrative flow; three animation themes       | 2025‑05‑02 |
 | Client M2 | API‑key management, sensor integration feasibility, feedback loop | 2025‑05‑30 |
-| Dev M2    | Joint debugging and feature refinement with the client            | 2025‑06‑04 |
+| OTHER     | Joint debugging and feature refinement with the client            | 2025‑06‑04 |
 
 ---
 
